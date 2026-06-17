@@ -1,10 +1,19 @@
-# SmartLift Group 21 v2.1 Clean Simulator
+# SmartLift Group 21 v2.2 Suspension Stiffness Update
 
-Changes made:
+Added based on feedback:
 
-- Removed the large baked-in vehicle from the road simulator background.
-- Kept only the selected fleet vehicle as the moving test vehicle.
-- Removed duplicate Flood Zone / Rough Road / Blocked Wheel labels and overlay boxes.
-- Moved Recent Activity into the right dashboard panel so users do not need to scroll to the bottom.
-- Made the right dashboard sticky and more compact so statistics stay visible while driving.
-- Retained fleet vehicle selector and different vehicle behaviours for Ambulance, Fire Truck, and City Bus.
+- New **Suspension Status** panel inside the Vehicle Simulator dashboard.
+- Shows **Ride Height** and **Suspension Stiffness** together.
+- Different suspension settings by mode:
+  - Normal: Normal stiffness, standard ride height.
+  - Flood Mode: +150 mm ride height with firmer stabilised control.
+  - Pothole Alert: +60 mm ride height with slightly softened/adaptive-soft stiffness.
+  - 3-Wheel Mode: adaptive ride height with load-stabilised stiffness.
+  - Manual: custom stiffness note when user manually controls wheel modules.
+- Pothole area now updates stiffness dynamically between **Slightly Softened** and **Adaptive Soft** while wheel modules cycle.
+
+How to use:
+1. Open `index.html`.
+2. Go to Vehicle Simulator.
+3. Drive into the Rough Road / Potholes zone.
+4. Check the new Suspension Status panel on the right dashboard.

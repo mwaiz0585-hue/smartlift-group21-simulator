@@ -40,8 +40,8 @@ const SmartLift = (() => {
   // shown to the user so the onboard AI objective isn't just implied.
   const MODE_INFO = {
     NORMAL:    { label: 'Normal',        sub: 'Standard ride height',  icon: '◇', tag: 'good',  reasoning: 'No hazard detected. Maintaining standard ride height for fuel efficiency and comfort.' },
-    FLOOD:     { label: 'Flood Mode',    sub: 'High water level',      icon: '♒', tag: 'alert', reasoning: 'Water level exceeds 15cm threshold. Lifting all four wheels to maximum 150mm to keep the chassis and intake above the waterline.' },
-    POTHOLE:   { label: 'Pothole Alert', sub: 'Rough terrain',         icon: '⌁', tag: 'warn',  reasoning: 'Vibration signature matches an uneven-surface profile. Pre-emptively cycling diagonal wheel pairs to absorb impact before it reaches the chassis.' },
+    FLOOD:     { label: 'Flood Mode',    sub: 'High water level',      icon: '♒', tag: 'alert', reasoning: 'Water level exceeds 15cm threshold. Lifting all four wheels to maximum 150mm while using a firmer stabilised setup to keep the chassis and intake above the waterline.' },
+    POTHOLE:   { label: 'Pothole Alert', sub: 'Rough terrain',         icon: '⌁', tag: 'warn',  reasoning: 'Vibration signature matches an uneven-surface profile. Suspension stiffness is slightly softened so the wheel modules can absorb rough impact while maintaining chassis stability.' },
     EMERGENCY: { label: '3-Wheel Mode',  sub: 'Adaptive drive',        icon: '✣', tag: 'alert', reasoning: 'Wheel obstruction reported on Front-Left. Retracting the affected module and redistributing load across the remaining three wheels to keep the vehicle mobile.' },
   };
 
@@ -86,6 +86,23 @@ const SmartLift = (() => {
     return { FL: 'normal', FR: 'normal', RL: 'normal', RR: 'normal' };
   }
 
+  const SUSPENSION_PRESETS = {
+    NORMAL:    { rideHeight: 'Standard', rideHeightMm: 0,   stiffnessLabel: 'Normal',             stiffnessPct: 55, note: 'Balanced comfort and control for normal road driving.' },
+    FLOOD:     { rideHeight: '+150 mm',   rideHeightMm: 150, stiffnessLabel: 'Firm / Stabilised',  stiffnessPct: 72, note: 'Raised ride height with firmer control to keep the chassis stable above floodwater.' },
+    POTHOLE:   { rideHeight: '+60 mm',    rideHeightMm: 60,  stiffnessLabel: 'Slightly Softened',  stiffnessPct: 38, note: 'Softened damping helps the wheels absorb pothole impact before it reaches the chassis.' },
+    EMERGENCY: { rideHeight: 'Adaptive',  rideHeightMm: 90,  stiffnessLabel: 'Load Stabilised',    stiffnessPct: 82, note: 'Stiffer load control supports emergency 3-wheel mobility and reduces body roll.' },
+    MANUAL:    { rideHeight: 'Custom',    rideHeightMm: 0,   stiffnessLabel: 'Manual Custom',      stiffnessPct: 50, note: 'Driver has manually adjusted wheel modules. Edge AI is monitoring but not commanding suspension.' },
+  };
+
+  function applySuspensionPreset(mode) {
+    const p = SUSPENSION_PRESETS[mode] || SUSPENSION_PRESETS.NORMAL;
+    vehicle.rideHeight = p.rideHeight;
+    vehicle.rideHeightMm = p.rideHeightMm;
+    vehicle.stiffnessLabel = p.stiffnessLabel;
+    vehicle.stiffnessPct = p.stiffnessPct;
+    vehicle.stiffnessNote = p.note;
+  }
+
   // --- The simulator vehicle (the one you actively drive) ---
   const vehicle = {
     id: 'SL-04',
@@ -99,6 +116,8 @@ const SmartLift = (() => {
     pendingSince: 0,
     water: 0, vibration: 0.3,
     road: 'Smooth', roadSub: 'Normal road',
+    rideHeight: 'Standard', rideHeightMm: 0, stiffnessLabel: 'Normal', stiffnessPct: 55,
+    stiffnessNote: 'Balanced comfort and control for normal road driving.',
     wheel: freshWheelState(),
     keys: new Set(),
     roughPulse: false,
@@ -149,18 +168,24 @@ const SmartLift = (() => {
     if (mode === 'NORMAL') {
       vehicle.water = Math.max(0, vehicle.water - 4);
       vehicle.road = 'Smooth'; vehicle.roadSub = 'Normal road'; vehicle.vibration = 0.3;
+      applySuspensionPreset('NORMAL');
       setWheelPattern(freshWheelState());
     }
     if (mode === 'FLOOD') {
       vehicle.water = 32; vehicle.road = 'Flood Zone'; vehicle.roadSub = 'High water level'; vehicle.vibration = 0.7;
+      applySuspensionPreset('FLOOD');
       setWheelPattern({ FL: 'lifted', FR: 'lifted', RL: 'lifted', RR: 'lifted' });
     }
     if (mode === 'POTHOLE') {
       vehicle.road = 'Rough'; vehicle.roadSub = 'Uneven surface'; vehicle.vibration = 2.4;
+      applySuspensionPreset('POTHOLE');
       setWheelPattern(vehicle.roughPulse ? { FL: 'lifted', RR: 'lifted' } : { FR: 'lifted', RL: 'lifted' });
+      vehicle.stiffnessPct = vehicle.roughPulse ? 34 : 42;
+      vehicle.stiffnessLabel = vehicle.roughPulse ? 'Slightly Softened' : 'Adaptive Soft';
     }
     if (mode === 'EMERGENCY') {
       vehicle.road = 'Wheel blocked'; vehicle.roadSub = 'Risk reported'; vehicle.vibration = 1.8;
+      applySuspensionPreset('EMERGENCY');
       setWheelPattern({ FL: 'retracted' });
     }
 
@@ -277,6 +302,7 @@ const SmartLift = (() => {
     const targetState = kind === 'lift' ? (current === 'lifted' ? 'normal' : 'lifted') : (current === 'retracted' ? 'normal' : 'retracted');
     vehicle.wheel[wheel] = targetState;
     vehicle.road = 'Manual override'; vehicle.roadSub = 'Driver controlled';
+    applySuspensionPreset('MANUAL');
     addLog(targetState === 'retracted' ? 'ALERT' : 'INFO', `${WHEEL_NAMES[wheel]} ${targetState}`, `Driver manually set ${WHEEL_NAMES[wheel]} module to ${targetState}.`);
     fleetSyncSimVehicle();
     notify();
@@ -291,6 +317,8 @@ const SmartLift = (() => {
       vehicle._pulseLast = now;
       vehicle.roughPulse = !vehicle.roughPulse;
       setWheelPattern(vehicle.roughPulse ? { FL: 'lifted', RR: 'lifted' } : { FR: 'lifted', RL: 'lifted' });
+      vehicle.stiffnessPct = vehicle.roughPulse ? 34 : 42;
+      vehicle.stiffnessLabel = vehicle.roughPulse ? 'Slightly Softened' : 'Adaptive Soft';
     }
   }
 
@@ -354,7 +382,7 @@ const SmartLift = (() => {
   recomputeMaintenanceAlerts();
 
   return {
-    WHEEL_NAMES, MODE_INFO, ZONES, VEHICLE_PROFILES, getVehicleProfile, selectFleetVehicle,
+    WHEEL_NAMES, MODE_INFO, ZONES, VEHICLE_PROFILES, SUSPENSION_PRESETS, getVehicleProfile, selectFleetVehicle,
     vehicle, fleet,
     get selectedVehicleId() { return selectedVehicleId; },
     get roadReports() { return roadReports; },

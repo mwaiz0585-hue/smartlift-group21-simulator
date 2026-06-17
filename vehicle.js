@@ -92,6 +92,16 @@ const VehiclePage = (() => {
             </div>
           </div>
 
+          <div class="section suspension-status-section" style="padding-top:0">
+            <h3 class="section-title">Suspension Status</h3>
+            <div class="suspension-status-card" id="suspensionStatusCard">
+              <div class="suspension-stat"><small>Ride Height</small><strong id="rideHeightValue">Standard</strong></div>
+              <div class="suspension-stat"><small>Stiffness</small><strong id="stiffnessValue">Normal</strong></div>
+              <div class="stiffness-meter"><span id="stiffnessBar"></span></div>
+              <p id="stiffnessNote">Balanced comfort and control for normal road driving.</p>
+            </div>
+          </div>
+
           <div class="section control-row">
             <div class="mini-panel">
               <h3>Manual Drive</h3>
@@ -145,7 +155,7 @@ const VehiclePage = (() => {
     const page = document.getElementById('page-vehicle');
     page.innerHTML = markup();
     document.getElementById('topActions').innerHTML = topActionsMarkup();
-    document.getElementById('pageTitle').innerHTML = `<h1>SmartLift <span>Vehicle Simulator</span></h1><p>Drive into a hazard zone and watch the edge AI decide or take manual control.</p>`;
+    document.getElementById('pageTitle').innerHTML = `<h1>SmartLift <span>Vehicle Simulator</span></h1><p>Drive into a hazard zone and watch the edge AI decide — or take manual control.</p>`;
 
     stageEl = document.getElementById('stage');
     carEl = document.getElementById('car');
@@ -304,6 +314,20 @@ const VehiclePage = (() => {
     document.getElementById('roadValue').textContent = v.road;
     document.getElementById('roadSub').textContent = v.roadSub;
     document.getElementById('vibrationValue').innerHTML = `${v.vibration.toFixed(1)}<span class="unit">m/s²</span>`;
+
+    const rideHeightValue = document.getElementById('rideHeightValue');
+    const stiffnessValue = document.getElementById('stiffnessValue');
+    const stiffnessBar = document.getElementById('stiffnessBar');
+    const stiffnessNote = document.getElementById('stiffnessNote');
+    const suspensionCard = document.getElementById('suspensionStatusCard');
+    if (rideHeightValue) rideHeightValue.textContent = v.rideHeight || 'Standard';
+    if (stiffnessValue) stiffnessValue.textContent = v.stiffnessLabel || 'Normal';
+    if (stiffnessBar) stiffnessBar.style.width = `${Math.max(8, Math.min(100, v.stiffnessPct || 55))}%`;
+    if (stiffnessNote) stiffnessNote.textContent = v.stiffnessNote || 'Balanced comfort and control for normal road driving.';
+    if (suspensionCard) {
+      suspensionCard.dataset.mode = v.mode;
+      suspensionCard.dataset.control = v.controlMode;
+    }
 
     // Wheels
     Object.keys(SmartLift.WHEEL_NAMES).forEach(w => {
