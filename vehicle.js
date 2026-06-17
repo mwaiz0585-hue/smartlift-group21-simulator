@@ -155,7 +155,7 @@ const VehiclePage = (() => {
     const page = document.getElementById('page-vehicle');
     page.innerHTML = markup();
     document.getElementById('topActions').innerHTML = topActionsMarkup();
-    document.getElementById('pageTitle').innerHTML = `<h1>SmartLift <span>Vehicle Simulator</span></h1><p>Drive into a hazard zone and watch the edge AI decide — or take manual control.</p>`;
+    document.getElementById('pageTitle').innerHTML = `<h1>SmartLift <span>Vehicle Simulator</span></h1><p>Drive into a hazard zone and watch the edge AI decide or take manual control.</p>`;
 
     stageEl = document.getElementById('stage');
     carEl = document.getElementById('car');
