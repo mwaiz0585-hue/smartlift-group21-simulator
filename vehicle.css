@@ -1,0 +1,461 @@
+/* ============================================================
+   Vehicle Simulator page styles
+   ============================================================ */
+
+#page-vehicle .workspace {
+  display: grid;
+  grid-template-columns: minmax(620px, 1.55fr) minmax(430px, 0.95fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+#page-vehicle .stage {
+  height: clamp(500px, 62vh, 620px);
+  min-height: 500px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #dfe6eb url('assets/stage_nocar_clean.png') center center / cover no-repeat;
+}
+
+/* Hazard zones — real, positioned CSS boxes (not dependent on matching
+   blob shapes baked into a background photo, so a 5th zone can be added
+   purely by editing ZONES in state.js + adding one CSS rule here). */
+.zone {
+  position: absolute;
+  z-index: 5;
+  border-radius: 22px;
+  pointer-events: none;
+  transition: box-shadow .25s ease;
+}
+.zone-label {
+  position: absolute;
+  z-index: 9;
+  background: rgba(23,35,51,0.92);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 12px;
+  padding: 12px 14px;
+  min-width: 168px;
+  max-width: 210px;
+  box-shadow: 0 16px 32px rgba(23,35,51,0.22);
+  font-size: 0.8rem;
+  line-height: 1.42;
+}
+.zone-label strong { display: flex; align-items: center; gap: 7px; margin-bottom: 4px; font-size: 0.88rem; }
+.zone-label small { color: rgba(255,255,255,0.78); font-weight: 600; }
+
+.zone.water {
+  border: 2px solid rgba(37,141,255,0.55);
+  background: rgba(37,141,255,0.10);
+  box-shadow: inset 0 0 30px rgba(37,141,255,0.10);
+}
+.zone.rough {
+  border: 2px dashed rgba(246,168,0,0.65);
+  background: rgba(246,168,0,0.08);
+}
+.zone.blocked {
+  border: 2px solid rgba(239,78,78,0.55);
+  background: rgba(239,78,78,0.08);
+}
+.zone.active-highlight { box-shadow: 0 0 0 6px rgba(255,255,255,0.18), inset 0 0 40px rgba(255,255,255,0.12); }
+
+.sim-car {
+  --angle: 0deg;
+  --spin: 0deg;
+  position: absolute;
+  left: 52%; top: 55%;
+  width: 96px; height: 194px;
+  z-index: 12;
+  transform: translate(-50%, -50%) rotate(var(--angle));
+  transform-origin: 50% 50%;
+  filter: drop-shadow(0 24px 20px rgba(0,0,0,0.30));
+  transition: filter .2s ease;
+}
+.sim-car.moving { filter: drop-shadow(0 28px 22px rgba(0,0,0,0.34)) drop-shadow(0 0 14px rgba(0,169,165,0.30)); }
+
+.car-body {
+  position: absolute; left: 18px; right: 18px; top: 4px; bottom: 4px;
+  border-radius: 38px 38px 30px 30px;
+  background: linear-gradient(90deg, rgba(0,0,0,0.16), transparent 14%, transparent 86%, rgba(0,0,0,0.16)), linear-gradient(180deg, #fff, #e4ebef 46%, #fbfdff);
+  border: 1px solid rgba(0,0,0,0.25);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.8), inset 0 -20px 24px rgba(73,91,106,0.12);
+}
+.car-body::before {
+  content: ""; position: absolute; left: 12px; right: 12px; top: 24px; height: 66px; border-radius: 26px;
+  background: linear-gradient(180deg, rgba(28,46,62,0.95), rgba(79,102,122,0.85));
+  box-shadow: inset 0 0 16px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(255,255,255,0.16);
+}
+.car-body::after {
+  content: ""; position: absolute; left: 14px; right: 14px; bottom: 30px; height: 50px; border-radius: 21px;
+  background: linear-gradient(180deg, rgba(71,94,113,0.85), rgba(32,48,63,0.95));
+  box-shadow: inset 0 0 13px rgba(0,0,0,0.38), inset 0 0 0 1px rgba(255,255,255,0.14);
+}
+.car-accent {
+  position: absolute; left: 44px; top: 92px; width: 8px; height: 14px; border-radius: 3px;
+  background: var(--blue); box-shadow: 0 0 12px rgba(37,141,255,0.7); z-index: 5;
+}
+.direction-arrow {
+  position: absolute; left: 50%; bottom: -42px; transform: translateX(-50%);
+  width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent;
+  border-bottom: 22px solid var(--teal-2); filter: drop-shadow(0 0 12px rgba(24,198,188,0.9)); opacity: 0.95;
+}
+
+.wheel-module {
+  position: absolute; width: 33px; height: 58px; border-radius: 15px;
+  background: rgba(7, 20, 28, 0.94); border: 1px solid rgba(255,255,255,0.5);
+  box-shadow: 0 0 0 5px rgba(0,169,165,0.12), 0 0 20px rgba(0,169,165,0.4);
+  transition: transform .22s ease, opacity .22s ease, box-shadow .22s ease;
+}
+.wheel-module.fl { left: -4px; top: 40px; }
+.wheel-module.fr { right: -4px; top: 40px; }
+.wheel-module.rl { left: -4px; bottom: 40px; }
+.wheel-module.rr { right: -4px; bottom: 40px; }
+.wheel-module::before {
+  content: ""; position: absolute; left: 9px; right: 9px; top: 6px; bottom: 6px; border-radius: 99px;
+  background: #111923; border: 2px solid #475a68;
+  box-shadow: inset 0 0 0 4px rgba(0,169,165,0.5), inset 0 0 0 7px #0d141c;
+}
+.wheel-module::after {
+  content: ""; position: absolute; left: 50%; top: 50%; width: 7px; height: 24px;
+  transform: translate(-50%, -50%) rotate(var(--spin)); border-radius: 99px; background: rgba(255,255,255,0.45);
+}
+.wheel-module.lifted { transform: translateY(-12px) scale(.88); box-shadow: 0 0 0 5px rgba(0,169,165,0.3), 0 0 26px rgba(0,169,165,0.65); }
+.wheel-module.retracted { transform: translateY(-22px) scale(.7); opacity: .35; box-shadow: 0 0 0 5px rgba(239,78,78,0.3), 0 0 24px rgba(239,78,78,0.6); }
+
+/* ---- Right panel ---- */
+#page-vehicle .right-panel { display: flex; flex-direction: column; gap: 10px; }
+
+.control-mode-switch {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 4px;
+  background: var(--surface-3); border-radius: 12px; border: 1px solid var(--border);
+}
+.control-mode-switch button {
+  border: none; background: none; padding: 9px 8px; border-radius: 9px;
+  font-weight: 850; font-size: 0.84rem; color: var(--text-2); display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.control-mode-switch button.active { background: var(--surface); color: var(--teal); box-shadow: var(--soft-shadow); }
+.control-mode-switch button svg { width: 16px; height: 16px; }
+
+.mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mode-card {
+  border: 1px solid var(--border); border-radius: 14px; padding: 12px;
+  display: flex; align-items: center; gap: 10px; background: var(--surface);
+  cursor: pointer; transition: border-color .15s ease, background .15s ease;
+}
+.mode-card:hover { border-color: var(--border-strong); }
+.mode-card.active { border-color: #1ec6c6; background: #f9ffff; }
+.mode-card .mode-icon { font-size: 1.3rem; width: 30px; text-align: center; color: var(--teal); }
+.mode-card strong { display: block; font-size: 0.88rem; }
+.mode-card small { color: var(--muted); font-weight: 600; font-size: 0.74rem; }
+.mode-card:disabled, .mode-card.disabled { opacity: .45; cursor: not-allowed; }
+
+/* AI reasoning callout — makes the "onboard edge AI" objective visible,
+   not just implied by mode names changing. */
+.ai-reasoning {
+  border-radius: 14px; padding: 13px 14px; border: 1px solid rgba(0,169,165,0.3);
+  background: linear-gradient(180deg, rgba(0,169,165,0.07), rgba(0,169,165,0.02));
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.ai-reasoning .ai-icon {
+  width: 28px; height: 28px; border-radius: 9px; background: var(--teal); color: #fff;
+  display: flex; align-items: center; justify-content: center; flex: none; font-size: .85rem; font-weight: 900;
+}
+.ai-reasoning .ai-body strong { display: block; font-size: 0.8rem; color: var(--teal); margin-bottom: 3px; text-transform: uppercase; letter-spacing: .03em; }
+.ai-reasoning .ai-body p { margin: 0; font-size: 0.85rem; color: var(--text-2); line-height: 1.45; }
+.ai-reasoning.manual { border-color: var(--border); background: var(--surface-2); }
+.ai-reasoning.manual .ai-icon { background: var(--muted); }
+.ai-reasoning.manual .ai-body strong { color: var(--muted); }
+
+.wheel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.wheel-tile {
+  border: 1px solid var(--border); border-radius: 12px; padding: 10px; display: flex; align-items: center; gap: 8px;
+  background: var(--surface); font-size: 0.82rem;
+}
+.wheel-tile.retracted { border-color: rgba(239,78,78,0.4); background: rgba(239,78,78,0.05); }
+.wheel-tile.lifted { border-color: rgba(0,169,165,0.4); background: rgba(0,169,165,0.05); }
+.wheel-tile strong { display: block; }
+.wheel-tile small { color: var(--muted); font-weight: 600; }
+.wheel-tile .upmark { margin-left: auto; font-weight: 900; color: var(--teal); }
+.wheel-tile.retracted .upmark { color: var(--red); }
+.wheel-state-icon { font-size: 1.1rem; color: var(--muted); }
+
+.metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.metric { border: 1px solid var(--border); border-radius: 12px; padding: 11px; background: var(--surface); position: relative; min-height: 78px; }
+.metric small { color: var(--muted); font-weight: 700; font-size: 0.72rem; text-transform: uppercase; letter-spacing: .02em; }
+.metric .big { display: block; font-size: 1.3rem; font-weight: 900; margin-top: 4px; }
+.metric .unit { font-size: 0.68rem; font-weight: 700; color: var(--muted); margin-left: 3px; }
+.metric .mini-chart { position: absolute; right: 8px; bottom: 8px; width: 64px; height: 26px; opacity: .5; }
+.metric .mini-chart path { fill: none; stroke: var(--teal); stroke-width: 2; }
+.metric .mini-chart.blue path { stroke: var(--blue); }
+
+.control-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mini-panel { border: 1px solid var(--border); border-radius: 14px; padding: 12px; background: var(--surface); }
+.mini-panel h3 { margin: 0 0 3px; font-size: 0.88rem; }
+.mini-panel p { margin: 0 0 10px; font-size: 0.76rem; color: var(--muted); font-weight: 600; }
+
+.drive-pad { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; max-width: 168px; }
+.drive-pad button {
+  border: 1px solid var(--border); background: var(--surface-2); border-radius: 10px; height: 42px;
+  font-size: 1.1rem; color: var(--text-2); font-weight: 800;
+}
+.drive-pad button:active { background: var(--teal); color: #fff; }
+.drive-pad button.center { font-size: 0.9rem; }
+.drive-pad button:disabled { opacity: .4; }
+
+.wheel-controls { display: grid; gap: 7px; }
+.wheel-control { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; }
+.wheel-control .lift-icon { width: 20px; text-align: center; color: var(--muted); }
+.wheel-control span { flex: 1; font-weight: 700; }
+.switch { width: 38px; height: 22px; border-radius: 99px; background: #e3eaef; border: 1px solid var(--border); position: relative; flex: none; }
+.switch::after { content: ""; position: absolute; top: 1px; left: 1px; width: 18px; height: 18px; border-radius: 99px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.25); transition: transform .15s ease; }
+.switch.lift.on { background: var(--teal); } .switch.lift.on::after { transform: translateX(16px); }
+.switch.retract.on { background: var(--red); } .switch.retract.on::after { transform: translateX(16px); }
+.switch:disabled, .switch.disabled { opacity: .4; }
+
+.lift-viz { border: 1px solid var(--border); border-radius: 14px; padding: 14px; background: var(--surface); }
+.viz-wrap { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 16px; }
+.side-car-scene { height: 86px; background: url('assets/side_car_only.png') left 8px center / 270px auto no-repeat; position: relative; }
+.stability { text-align: center; min-width: 92px; }
+.stability small { display: block; color: var(--muted); font-weight: 700; font-size: 0.72rem; text-transform: uppercase; }
+.stability strong { display: block; font-size: 1.5rem; margin: 2px 0; }
+.bar { display: block; height: 9px; border-radius: 99px; background: #e3eaef; overflow: hidden; }
+.bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--teal), var(--teal-2)); transition: width .3s ease; }
+
+.log-table-wrap { max-height: 220px; overflow-y: auto; }
+
+@media (max-width: 1280px) {
+  #page-vehicle .workspace { grid-template-columns: 1fr; }
+  #page-vehicle .stage { min-height: 500px; }
+}
+@media (max-width: 760px) {
+  #page-vehicle .mode-grid, .metrics, .wheel-grid { grid-template-columns: 1fr 1fr; }
+  .control-row { grid-template-columns: 1fr; }
+  #page-vehicle .stage { height: 480px; min-height: 480px; }
+  .sim-car { width: 80px; height: 162px; }
+}
+
+/* ============================================================
+   Fleet-linked vehicle selector + vehicle-specific simulator models
+   ============================================================ */
+.fleet-select-card {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+.fleet-select-card label {
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+.fleet-select-card select {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px 11px;
+  font-weight: 800;
+  outline: none;
+}
+.fleet-select-card select:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(0,169,165,.12); }
+.vehicle-behaviour {
+  color: var(--text-2);
+  background: rgba(0,169,165,.06);
+  border: 1px solid rgba(0,169,165,.14);
+  border-radius: 10px;
+  padding: 9px 10px;
+  font-size: .76rem;
+  line-height: 1.45;
+  font-weight: 650;
+}
+
+.sim-car {
+  width: var(--vehicle-width, 96px);
+  height: var(--vehicle-height, 194px);
+}
+.sim-car[data-type="Ambulance"] { --vehicle-width: 96px; --vehicle-height: 194px; }
+.sim-car[data-type="Fire Truck"] { --vehicle-width: 124px; --vehicle-height: 216px; }
+.sim-car[data-type="City Bus"] { --vehicle-width: 112px; --vehicle-height: 270px; }
+
+.vehicle-roof-label {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 7;
+  color: rgba(255,255,255,.86);
+  background: rgba(0,0,0,.22);
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 7px;
+  padding: 3px 6px;
+  font-size: .58rem;
+  letter-spacing: .08em;
+  font-weight: 900;
+  pointer-events: none;
+}
+
+.sim-car[data-type="Ambulance"] .car-body {
+  left: 18px; right: 18px; top: 4px; bottom: 4px;
+  border-radius: 38px 38px 30px 30px;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,0.16), transparent 14%, transparent 86%, rgba(0,0,0,0.16)),
+    linear-gradient(180deg, #ffffff, #e4ebef 46%, #fbfdff);
+}
+.sim-car[data-type="Ambulance"] .car-body::before {
+  left: 12px; right: 12px; top: 24px; height: 66px; border-radius: 26px;
+}
+.sim-car[data-type="Ambulance"] .car-body::after {
+  left: 14px; right: 14px; bottom: 30px; height: 50px; border-radius: 21px;
+}
+.sim-car[data-type="Ambulance"] .car-accent { background: #258dff; }
+
+.sim-car[data-type="Fire Truck"] .car-body {
+  left: 14px; right: 14px; top: 8px; bottom: 8px;
+  border-radius: 20px 20px 16px 16px;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.20), transparent 13%, transparent 87%, rgba(0,0,0,.20)),
+    linear-gradient(180deg, #ff5a50 0%, #d83b34 44%, #b62928 100%);
+  border-color: rgba(87,0,0,.35);
+}
+.sim-car[data-type="Fire Truck"] .car-body::before {
+  left: 16px; right: 16px; top: 26px; height: 48px; border-radius: 14px;
+  background: linear-gradient(180deg, rgba(28,46,62,.92), rgba(77,95,112,.82));
+}
+.sim-car[data-type="Fire Truck"] .car-body::after {
+  left: 16px; right: 16px; bottom: 24px; height: 98px; border-radius: 10px;
+  background:
+    repeating-linear-gradient(180deg, rgba(255,255,255,.28) 0 7px, transparent 7px 17px),
+    linear-gradient(180deg, rgba(255,255,255,.18), rgba(0,0,0,.08));
+}
+.sim-car[data-type="Fire Truck"] .car-accent {
+  left: 50%; top: 84px; transform: translateX(-50%);
+  width: 30px; height: 7px; background: #ffd166;
+  box-shadow: 0 0 14px rgba(255,209,102,.85);
+}
+.sim-car[data-type="Fire Truck"] .wheel-module { width: 38px; height: 64px; }
+.sim-car[data-type="Fire Truck"] .wheel-module.fl { left: -5px; top: 46px; }
+.sim-car[data-type="Fire Truck"] .wheel-module.fr { right: -5px; top: 46px; }
+.sim-car[data-type="Fire Truck"] .wheel-module.rl { left: -5px; bottom: 46px; }
+.sim-car[data-type="Fire Truck"] .wheel-module.rr { right: -5px; bottom: 46px; }
+
+.sim-car[data-type="City Bus"] .car-body {
+  left: 16px; right: 16px; top: 6px; bottom: 6px;
+  border-radius: 18px;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.16), transparent 14%, transparent 86%, rgba(0,0,0,.16)),
+    linear-gradient(180deg, #fff8d8 0%, #ffd166 42%, #e6a937 100%);
+  border-color: rgba(128,89,0,.32);
+}
+.sim-car[data-type="City Bus"] .car-body::before {
+  left: 15px; right: 15px; top: 22px; height: 92px; border-radius: 12px;
+  background:
+    repeating-linear-gradient(180deg, rgba(27,47,64,.95) 0 14px, rgba(27,47,64,.95) 14px, rgba(255,255,255,.34) 15px, rgba(255,255,255,.34) 17px, rgba(27,47,64,.95) 18px 32px);
+  box-shadow: inset 0 0 16px rgba(0,0,0,.32);
+}
+.sim-car[data-type="City Bus"] .car-body::after {
+  left: 15px; right: 15px; bottom: 28px; height: 90px; border-radius: 12px;
+  background:
+    repeating-linear-gradient(180deg, rgba(35,55,74,.90) 0 14px, rgba(35,55,74,.90) 14px, rgba(255,255,255,.30) 15px, rgba(255,255,255,.30) 17px, rgba(35,55,74,.90) 18px 32px);
+}
+.sim-car[data-type="City Bus"] .car-accent {
+  left: 50%; top: 128px; transform: translateX(-50%);
+  width: 26px; height: 8px; background: #00a9a5;
+}
+.sim-car[data-type="City Bus"] .wheel-module { width: 36px; height: 66px; }
+.sim-car[data-type="City Bus"] .wheel-module.fl { left: -5px; top: 52px; }
+.sim-car[data-type="City Bus"] .wheel-module.fr { right: -5px; top: 52px; }
+.sim-car[data-type="City Bus"] .wheel-module.rl { left: -5px; bottom: 52px; }
+.sim-car[data-type="City Bus"] .wheel-module.rr { right: -5px; bottom: 52px; }
+
+.side-car-scene[data-type="Ambulance"] { background: url('assets/side_car_only.png') left 8px center / 270px auto no-repeat; }
+.side-car-scene[data-type="Fire Truck"], .side-car-scene[data-type="City Bus"] { background: none; }
+.side-car-scene[data-type="Fire Truck"]::before,
+.side-car-scene[data-type="City Bus"]::before {
+  content: "";
+  position: absolute;
+  left: 12px; bottom: 23px;
+  height: 36px;
+  border-radius: 10px 14px 8px 8px;
+  border: 1px solid #bfc9d0;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.7), 0 12px 18px rgba(23,35,51,.10);
+}
+.side-car-scene[data-type="Fire Truck"]::before {
+  width: 230px;
+  background: linear-gradient(180deg,#ff665d,#c93231);
+}
+.side-car-scene[data-type="City Bus"]::before {
+  width: 278px;
+  background: linear-gradient(180deg,#fff6cf,#e5a936);
+}
+.side-car-scene[data-type="Fire Truck"]::after,
+.side-car-scene[data-type="City Bus"]::after {
+  content: attr(data-type);
+  position: absolute;
+  left: 28px; bottom: 36px;
+  color: rgba(0,0,0,.58);
+  font-size: .68rem;
+  font-weight: 900;
+  letter-spacing: .04em;
+}
+
+
+/* ============================================================
+   v2.1 clean simulator fixes
+   - background has no baked-in center vehicle
+   - zone labels/boxes are hidden to avoid duplication with the map art
+   - stats/log stay inside the right dashboard, no bottom scrolling needed
+   ============================================================ */
+#page-vehicle .workspace {
+  align-items: start;
+  grid-template-columns: minmax(620px, 1.42fr) minmax(440px, .88fr);
+}
+#page-vehicle .right-panel {
+  position: sticky;
+  top: 12px;
+  max-height: calc(100vh - 104px);
+  overflow: auto;
+  scrollbar-width: thin;
+}
+#page-vehicle .right-panel .section { padding: 10px 13px; }
+#page-vehicle .right-panel .panel-head { padding: 12px 14px; }
+#page-vehicle .zone-label { display: none !important; }
+#page-vehicle .zone {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  opacity: 0.01;
+}
+#page-vehicle .zone.active-highlight {
+  opacity: 1;
+  background: rgba(0,169,165,0.05) !important;
+  outline: 2px solid rgba(0,169,165,0.35);
+  outline-offset: -2px;
+  box-shadow: inset 0 0 26px rgba(0,169,165,0.18) !important;
+}
+#page-vehicle .metrics { grid-template-columns: repeat(4, 1fr); }
+#page-vehicle .metric { min-height: 74px; padding: 10px; }
+#page-vehicle .control-row { grid-template-columns: 1fr 1fr; }
+#page-vehicle .mode-grid { grid-template-columns: repeat(2, 1fr); }
+#page-vehicle .fleet-select-card, #page-vehicle .mini-panel, #page-vehicle .lift-viz { box-shadow: none; }
+#page-vehicle .event-log-compact .data-table td { padding: 8px 7px; font-size: .78rem; }
+#page-vehicle .event-log-compact .data-table td:nth-child(3) { max-width: 190px; }
+#page-vehicle .event-log-compact .empty-state { padding: 16px; }
+#page-vehicle .stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+}
+@media (max-width: 1280px) {
+  #page-vehicle .right-panel { position: static; max-height: none; overflow: visible; }
+}
+@media (max-width: 900px) {
+  #page-vehicle .metrics { grid-template-columns: 1fr 1fr; }
+  #page-vehicle .control-row { grid-template-columns: 1fr; }
+}

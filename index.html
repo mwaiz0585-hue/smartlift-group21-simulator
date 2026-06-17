@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SmartLift Operations Console | Group 21</title>
+<style>
+  :root {
+    --bg: #f6f9fc;
+    --surface: #ffffff;
+    --surface-2: #f9fbfd;
+    --surface-3: #eef5f7;
+    --border: #d9e3ea;
+    --border-strong: #bfd0da;
+    --text: #172333;
+    --text-2: #425266;
+    --muted: #748397;
+    --teal: #00a9a5;
+    --teal-2: #18c6bc;
+    --green: #18b85b;
+    --blue: #258dff;
+    --yellow: #f6a800;
+    --red: #ef4e4e;
+    --dark-card: #172333;
+    --shadow: 0 18px 45px rgba(42, 61, 82, 0.10);
+    --soft-shadow: 0 10px 24px rgba(42, 61, 82, 0.08);
+    --radius: 18px;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, Helvetica, sans-serif;
+    --mono: "SF Mono", "Roboto Mono", Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { min-height: 100%; }
+  body {
+    margin: 0;
+    font-family: var(--font);
+    color: var(--text);
+    background:
+      radial-gradient(circle at 8% 4%, rgba(0, 169, 165, 0.09), transparent 22%),
+      radial-gradient(circle at 92% 0%, rgba(37, 141, 255, 0.07), transparent 22%),
+      var(--bg);
+    overflow-x: hidden;
+  }
+  button, input, select { font-family: inherit; }
+  button { cursor: pointer; }
+
+  /* ---------- App shell ---------- */
+  .app {
+    width: min(1680px, 100%);
+    margin: 0 auto;
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 230px minmax(0, 1fr);
+    background: rgba(255,255,255,0.30);
+  }
+
+  .sidebar {
+    min-height: 100vh;
+    padding: 20px 18px;
+    border-right: 1px solid var(--border);
+    background: rgba(255,255,255,0.76);
+    backdrop-filter: blur(14px);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    position: sticky;
+    top: 0;
+    align-self: start;
+  }
+
+  .brand { padding: 2px 4px 12px; }
+  .brand-mark { width: 54px; height: 48px; margin-bottom: 8px; position: relative; }
+  .brand-mark svg { width: 100%; height: 100%; }
+  .brand-name { margin: 0; font-size: 1.05rem; font-weight: 850; letter-spacing: 0.03em; color: var(--teal); }
+  .version { margin-top: 7px; font-size: 0.82rem; font-weight: 700; color: var(--teal); }
+
+  .nav-title, .mini-title {
+    font-size: 0.72rem; font-weight: 850; letter-spacing: 0.10em;
+    color: var(--muted); text-transform: uppercase; margin: 4px 0 9px;
+  }
+
+  .nav { display: grid; gap: 7px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 13px; border-radius: 12px;
+    color: var(--text-2); font-weight: 700;
+    border: 1px solid transparent; cursor: pointer; user-select: none;
+    background: none; text-align: left; width: 100%; font-size: 0.92rem;
+  }
+  .nav-item svg { width: 20px; height: 20px; stroke: currentColor; flex: none; }
+  .nav-item.active {
+    color: #007f7b;
+    background: linear-gradient(180deg, rgba(0,169,165,0.12), rgba(0,169,165,0.06));
+    border-color: rgba(0,169,165,0.60);
+  }
+  .nav-item:hover:not(.active) { background: var(--surface-3); }
+  .nav-badge {
+    margin-left: auto; font-size: 0.68rem; font-weight: 900;
+    background: var(--red); color: #fff; border-radius: 99px;
+    padding: 2px 7px; min-width: 18px; text-align: center;
+  }
+
+  .status-panel {
+    border: 1px solid var(--border); border-radius: 14px;
+    background: rgba(255,255,255,0.78); box-shadow: var(--soft-shadow); padding: 14px;
+  }
+  .status-row {
+    display: flex; justify-content: space-between; gap: 10px; padding: 9px 0;
+    border-bottom: 1px solid #ecf1f5; color: var(--text-2); font-size: 0.85rem;
+  }
+  .status-row:last-child { border-bottom: 0; }
+  .status-row strong { color: var(--text); }
+  .ok { color: var(--green); font-weight: 800; }
+  .warn-text { color: var(--yellow); font-weight: 800; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 99px; background: var(--green); margin-right: 7px; }
+  .dot.amber { background: var(--yellow); }
+  .dot.red { background: var(--red); }
+
+  .project-note {
+    margin-top: auto; border-top: 1px solid var(--border); padding: 18px 5px 12px;
+    color: var(--teal); font-size: 0.88rem; line-height: 1.6; font-weight: 750;
+  }
+  .project-note .smile { float: right; font-size: 1.25rem; color: var(--teal); }
+
+  .main { min-width: 0; padding: 20px 22px 0; display: flex; flex-direction: column; gap: 14px; }
+
+  .topbar {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center; gap: 16px; padding: 0 2px 2px;
+  }
+  .title h1 { margin: 0; font-size: clamp(1.45rem, 2vw, 2.05rem); letter-spacing: -0.04em; line-height: 1.05; font-weight: 900; }
+  .title h1 span { color: var(--teal); margin-left: 8px; }
+  .title p { margin: 6px 0 0; color: var(--text-2); font-size: 0.92rem; }
+
+  .top-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+  .top-pill {
+    display: inline-flex; align-items: center; gap: 8px; padding: 10px 13px;
+    border-radius: 10px; border: 1px solid var(--border); background: var(--surface);
+    color: var(--text-2); box-shadow: 0 8px 18px rgba(42, 61, 82, 0.06);
+    font-weight: 750; font-size: 0.84rem; white-space: nowrap;
+  }
+  .top-pill.live { color: var(--text); }
+  .top-pill .live-text { color: var(--green); font-weight: 900; }
+  .top-pill button { border: none; background: none; color: inherit; font-weight: inherit; font-size: inherit; padding: 0; display: flex; align-items: center; gap: 8px; }
+
+  .panel {
+    background: rgba(255,255,255,0.90); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden;
+  }
+  .panel-head {
+    padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, #fff, #fbfdfe);
+  }
+  .panel-title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .panel-title h2 { margin: 0; font-size: 1.02rem; letter-spacing: -0.01em; }
+  .panel-title svg { width: 23px; height: 23px; stroke: var(--text-2); flex: none; }
+  .panel-tools { display: flex; gap: 8px; }
+
+  .tool-btn, .button {
+    border: 1px solid var(--border); background: var(--surface); color: var(--text-2);
+    border-radius: 10px; padding: 9px 12px; font-weight: 800; cursor: pointer;
+    transition: transform .15s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease;
+    display: inline-flex; align-items: center; gap: 8px; font-size: 0.84rem;
+  }
+  .tool-btn:hover, .button:hover { transform: translateY(-1px); border-color: var(--border-strong); box-shadow: var(--soft-shadow); }
+  .tool-btn svg, .button svg { width: 18px; height: 18px; }
+  .tool-btn.primary { background: var(--teal); color: #fff; border-color: var(--teal); }
+  .tool-btn.primary:hover { background: #018f8b; }
+  .tool-btn:disabled { opacity: .5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+  .section { padding: 16px; }
+  .section-title { margin: 0 0 12px; text-transform: uppercase; font-size: .82rem; letter-spacing: .02em; color: var(--text-2); font-weight: 850; }
+
+  .footer {
+    min-height: 42px; display: flex; align-items: center; gap: 22px;
+    border-top: 1px solid var(--border); color: var(--text-2); font-size: .82rem;
+    padding: 8px 2px 10px; flex-wrap: wrap;
+  }
+  .footer .push { margin-left: auto; }
+  .divider { height: 22px; width: 1px; background: var(--border); }
+
+  /* Generic table used by Logs + Fleet */
+  table.data-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  table.data-table th {
+    text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em;
+    color: var(--muted); font-weight: 850; padding: 8px 10px; border-bottom: 1px solid var(--border);
+  }
+  table.data-table td { padding: 11px 10px; border-bottom: 1px solid #eef2f6; color: var(--text-2); vertical-align: middle; }
+  table.data-table tr:last-child td { border-bottom: 0; }
+  table.data-table tr.row-link { cursor: pointer; }
+  table.data-table tr.row-link:hover td { background: var(--surface-3); }
+
+  .tag { font-weight: 900; border-radius: 7px; padding: 4px 7px; font-size: .68rem; display: inline-block; }
+  .tag.info { color: #006fda; background: rgba(37,141,255,.10); }
+  .tag.warn { color: #9b6700; background: rgba(246,168,0,.16); }
+  .tag.alert { color: #b43a23; background: rgba(239,78,78,.12); }
+  .tag.good { color: #0c8a47; background: rgba(24,184,91,.13); }
+  .tag.neutral { color: var(--text-2); background: var(--surface-3); }
+
+  .empty-state {
+    padding: 40px 20px; text-align: center; color: var(--muted); font-size: .9rem; font-weight: 600;
+  }
+
+  /* Page visibility */
+  .page { display: none; flex-direction: column; gap: 14px; }
+  .page.active { display: flex; }
+
+  @media (max-width: 1280px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { position: relative; min-height: auto; flex-direction: row; align-items: center; overflow-x: auto; }
+    .brand, .status-panel, .project-note { flex: 0 0 auto; }
+    .nav { display: flex; }
+    .nav-item { white-space: nowrap; }
+  }
+  @media (max-width: 760px) {
+    .main { padding: 14px 12px 0; }
+    .topbar { grid-template-columns: 1fr; }
+    .top-actions { justify-content: flex-start; }
+    .footer .push { margin-left: 0; }
+  }
+</style>
+<link rel="stylesheet" href="vehicle.css" />
+<link rel="stylesheet" href="fleet.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 64 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 40L53 7L42 49L31 31L9 40Z" stroke="#172333" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M31 31L53 7" stroke="#172333" stroke-width="3" stroke-linecap="round"/>
+            <path d="M13 11L20 16M6 21L15 22M22 5L25 14" stroke="#172333" stroke-width="3" stroke-linecap="round"/>
+            <path d="M25 44C28 48 36 48 39 43" stroke="#00a9a5" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <p class="brand-name">SMARTLIFT</p>
+        <div class="version">v1.0 · Group 21</div>
+      </div>
+
+      <nav>
+        <div class="nav-title">Navigation</div>
+        <div class="nav" id="mainNav">
+          <button class="nav-item active" data-page="vehicle">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M5 12l2-5h10l2 5"/><path d="M4 12h16v6H4z"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>
+            Vehicle Simulator
+          </button>
+          <button class="nav-item" data-page="fleet">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 10.5L12 3l9 7.5V21h-6v-6H9v6H3V10.5Z"/></svg>
+            Fleet Dashboard
+            <span class="nav-badge" id="fleetAlertBadge" style="display:none">0</span>
+          </button>
+          <button class="nav-item" data-page="logs">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 3h10l2 2v16H6z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>
+            System Log
+          </button>
+        </div>
+      </nav>
+
+      <div class="status-panel">
+        <div class="mini-title">System Status</div>
+        <div class="status-row"><span>Edge AI</span><strong class="ok"><span class="dot"></span>Active</strong></div>
+        <div class="status-row"><span>Cloud Sync</span><strong class="ok" id="cloudSyncStatus"><span class="dot"></span>Connected</strong></div>
+        <div class="status-row"><span>Fleet Size</span><strong id="fleetSizeStat">5 vehicles</strong></div>
+        <div class="status-row"><span>Uptime</span><strong id="uptime">00:00:00</strong></div>
+      </div>
+
+      <div class="project-note">
+        Built by Group 21 <span class="smile">☺</span><br>
+        Subject:<br>
+        Technopreneurship<br>
+        Team Project<br>
+        TFB2113
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="title" id="pageTitle">
+          <h1>SmartLift <span>Vehicle Simulator</span></h1>
+          <p>Drive into a hazard zone and watch the edge AI decide or take manual control.</p>
+        </div>
+        <div class="top-actions" id="topActions"></div>
+      </header>
+
+      <div class="page active" id="page-vehicle"></div>
+      <div class="page" id="page-fleet"></div>
+      <div class="page" id="page-logs"></div>
+
+      <footer class="footer">
+        <span><span class="dot" id="backendDot"></span>Backend: <strong class="ok" id="backendLabel">Connected</strong></span>
+        <span>Data Rate: <strong>25 Hz</strong></span>
+        <span class="push">Prototype build — not for production ☆</span>
+        <span>Built by Group 21</span>
+        <span class="divider"></span>
+        <span>Subject: Technopreneurship Team Project</span>
+        <span class="divider"></span>
+        <strong>TFB2113</strong>
+      </footer>
+    </main>
+  </div>
+
+  <script src="state.js"></script>
+  <script src="vehicle.js"></script>
+  <script src="fleet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

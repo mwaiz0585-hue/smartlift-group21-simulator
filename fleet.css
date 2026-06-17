@@ -1,0 +1,63 @@
+/* ============================================================
+   Fleet Dashboard page styles
+   ============================================================ */
+
+#page-fleet .fleet-summary {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+}
+.summary-card {
+  border: 1px solid var(--border); border-radius: 14px; padding: 14px; background: var(--surface); box-shadow: var(--soft-shadow);
+}
+.summary-card small { color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: .03em; font-size: 0.7rem; }
+.summary-card .big { display: block; font-size: 1.7rem; font-weight: 900; margin-top: 4px; }
+.summary-card .delta { font-size: 0.76rem; font-weight: 700; color: var(--muted); margin-top: 2px; display: block; }
+.summary-card.alert .big { color: var(--red); }
+.summary-card.warn .big { color: var(--yellow); }
+.summary-card.good .big { color: var(--green); }
+
+#page-fleet .fleet-grid {
+  display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; align-items: start;
+}
+
+.vehicle-row-mode { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; }
+.vehicle-row-mode .icon { font-size: 1rem; }
+.vehicle-id { font-weight: 900; color: var(--text); }
+.vehicle-sub { display: block; color: var(--muted); font-size: 0.74rem; font-weight: 600; margin-top: 1px; }
+
+.battery-pill {
+  display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: 0.8rem;
+}
+.battery-track { width: 50px; height: 7px; border-radius: 99px; background: #e3eaef; overflow: hidden; }
+.battery-fill { display: block; height: 100%; background: var(--green); }
+.battery-fill.low { background: var(--red); }
+.battery-fill.mid { background: var(--yellow); }
+
+.road-map-list { display: grid; gap: 8px; }
+.road-report-card {
+  border: 1px solid var(--border); border-radius: 12px; padding: 11px 12px; background: var(--surface);
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.road-report-card .rr-icon { font-size: 1.1rem; flex: none; margin-top: 1px; }
+.road-report-card .rr-body { flex: 1; min-width: 0; }
+.road-report-card .rr-body strong { display: block; font-size: 0.86rem; }
+.road-report-card .rr-body small { color: var(--muted); font-weight: 600; font-size: 0.74rem; }
+.road-report-card .rr-count {
+  font-size: 0.72rem; font-weight: 900; color: var(--teal); background: rgba(0,169,165,0.1);
+  border-radius: 8px; padding: 4px 8px; white-space: nowrap;
+}
+
+.maint-alert-card {
+  border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: var(--surface);
+  display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px;
+}
+.maint-alert-card.high { border-left: 3px solid var(--red); }
+.maint-alert-card.medium { border-left: 3px solid var(--yellow); }
+.maint-alert-card .ma-body { flex: 1; min-width: 0; }
+.maint-alert-card .ma-body strong { display: block; font-size: 0.86rem; }
+.maint-alert-card .ma-body ul { margin: 4px 0 0; padding-left: 16px; color: var(--text-2); font-size: 0.78rem; }
+.maint-alert-card .ma-body ul li { margin-bottom: 2px; }
+
+@media (max-width: 1280px) {
+  #page-fleet .fleet-summary { grid-template-columns: 1fr 1fr; }
+  #page-fleet .fleet-grid { grid-template-columns: 1fr; }
+}
